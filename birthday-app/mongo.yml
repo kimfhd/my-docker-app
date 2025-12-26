@@ -1,0 +1,29 @@
+version: '3'
+services:
+  birthday-app:
+    image: crpi-2mqcyvq6hy3lunzv.cn-hangzhou.personal.cr.aliyuncs.com/birthday-server/birthday-app:2.6
+    ports:
+      - 25323:3000
+  mongodb:
+    image: mongo
+    ports:
+      - 207:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=112358
+    volumes:
+      - mongo-data:/data/db
+  mongo-express:
+    image: mongo-express
+    ports:
+      - 8090:8081
+    restart: always
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=112358
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+    depends_on:
+      - mongodb
+volumes:
+  mongo-data:
+    driver: local

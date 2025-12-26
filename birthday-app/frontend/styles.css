@@ -1,0 +1,95 @@
+/* 全局样式 */
+body {
+    font-family: Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* 支持表情符号的字体 */
+    margin: 0;
+    padding: 0;
+    background: url('backimgs/background2.png'); /* 背景图 */
+    background-size: cover; /* 背景图覆盖整个页面 */
+    background-position: center; /* 背景图居中 */
+    background-repeat: no-repeat; /* 防止背景图重复 */
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 容器样式 */
+.container {
+    background: rgba(255, 255, 255, 0.5); /* 容器背景色，增加透明度 */
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 800px;
+}
+
+/* 标题样式 */
+h1 {
+    color: #ff4d94;
+    margin-bottom: 30px;
+}
+
+/* 按钮样式 */
+button {
+    background: #ff4d94;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: transform 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+/* 点赞按钮样式 */
+button.like-btn {
+    background-color: transparent; /* 移除背景色 */
+    border: none; /* 移除边框 */
+    padding: 0; /* 移除内边距 */
+    font-size: 24px; /* 调整字体大小 */
+    cursor: pointer; /* 保持手型指针 */
+    color: inherit; /* 继承父元素颜色 */
+    display: inline-flex; /* 确保内容居中 */
+    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 水平居中 */
+}
+
+/* 输入框样式 */
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #ffb3d9;
+    border-radius: 30px;
+    font-size: 16px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #ff4d94;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    button.like-btn {
+        font-size: 20px; /* 移动端调整字体大小 */
+    }
+}

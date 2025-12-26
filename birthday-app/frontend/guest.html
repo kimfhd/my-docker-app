@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy birthday to me</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 添加居中样式 */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .container button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎉 留下你的祝福 🎂</h1>
+
+    <input type="text" id="name" placeholder="你的名字（必填）" maxlength="20" required>
+    <input type="text" id="message" placeholder="写下祝福语...（最多50字）" maxlength="50" required>
+
+    <button onclick="saveGreeting()">💌 发送祝福</button>
+
+    <div id="loading" style="display: none; color: #ff4d94; margin: 10px 0;">
+        <span>加载中...</span>
+    </div>
+
+    <ul id="greetings-list" style="list-style: none; padding: 0; margin-top: 20px;"></ul>
+</div>
+
+<script>
+// 获取当前用户的名字
+function getUserId() {
+    return localStorage.getItem('username'); // 从本地存储中获取用户名字
+}
+
+// 格式化时间函数
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+// 提交祝福
+async function saveGreeting() {
+    const name = document.getElementById('name').value.trim();
+    const message = document.getElementById('message').value.trim();
+
+    if (!name || !message) {
+        alert('请填写完整信息！');
+        return;
+    }
+
+    // 存储用户名字到本地存储
+    localStorage.setItem('username', name);
+
+    try {
+        const response = await fetch('/greetings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, message })
+        });
+
+        if (response.ok) {
+            document.getElementById('name').value = '';
+            document.getElementById('message').value = '';
+            await loadGreetings();
+            alert('🎉 祝福发送成功！');
+        } else {
+            const errorData = await response.json();
+            alert(`发送失败: ${errorData.message}`);
+        }
+    } catch (error) {
+        console.error('发送失败:', error);
+        alert('发送失败，请稍后再试');
+    }
+}
+
+// 加载祝福
+async function loadGreetings() {
+    const loading = document.getElementById('loading');
+
+    try {
+        loading.style.display = 'block';
+
+        const response = await fetch('/greetings');
+        const data = await response.json();
+
+        const list = document.getElementById('greetings-list');
+        const userId = getUserId();
+
+        // 只显示当前用户发送的祝福
+        const userGreetings = data.filter(g => g.name === userId);
+
+        list.innerHTML = userGreetings.map(g => `
+            <li style="background: #fff0f6; padding: 15px; margin: 10px 0; border-radius: 10px;
+                        animation: fadeIn 0.5s ease-out;">
+                <p>${g.message}</p>
+                <div style="color: #666; font-size: 0.9em;">
+                    ${formatDate(g.createdAt)} <!-- 显示时间 -->
+                </div>
+            </li>
+        `).join('');
+
+        // 检查当前用户是否已经发送过祝福
+        if (userId) {
+            const hasSentGreeting = data.some(g => g.name === userId);
+            if (hasSentGreeting) {
+                document.getElementById('name').disabled = true;
+                document.getElementById('message').disabled = true;
+                document.querySelector('button[onclick="saveGreeting()"]').disabled = true;
+                alert('你已经发送过祝福了');
+            }
+        }
+    } catch (error) {
+        alert('加载失败');
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+// 初始化加载祝福
+loadGreetings();
+</script>
+</body>
+</html>

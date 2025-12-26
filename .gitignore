@@ -1,0 +1,6 @@
+.ssh/
+.acme.sh/
+.nvm/
+.viminfo
+node_modules/
+.env

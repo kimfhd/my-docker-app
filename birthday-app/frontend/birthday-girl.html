@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <style>
+        /* 全局样式 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-image: url('backimgs/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* 容器样式 */
+        .container {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            color: #8E4585;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        /* 图片轮播容器 */
+        .swiper-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .swiper-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+
+        /* 祝福墙样式 */
+        #greetings-wall {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .greeting-item {
+            padding: 10px;
+            border-bottom: 1px solid #ffb3d9;
+            text-align: left;
+        }
+
+        .greeting-item:last-child {
+            border-bottom: none;
+        }
+
+        .greeting-item span {
+            color: #ff4d94;
+            font-weight: bold;
+        }
+
+        .greeting-item div {
+            float: right;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* 静音按钮样式 */
+        #mute-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #ff4d94;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        #mute-btn:hover {
+            background-color: #e60073;
+        }
+    </style>
+</head>
+<body>
+<!-- 背景音乐 -->
+<audio id="bg-music" autoplay loop>
+    <source src="audio/G_E_M_ 邓紫棋 - 唯一.mp3" type="audio/mpeg">
+    您的浏览器不支持音频播放。
+</audio>
+
+<!-- 静音按钮 -->
+<button id="mute-btn">🔇</button>
+
+<div class="container">
+    <h1>🎂 祝21岁的你永远聪明可爱！🎉</h1>
+
+    <!-- 图片轮播容器 -->
+    <div class="swiper-container">
+        <div class="swiper-wrapper">
+            <!-- 10 张照片 -->
+            <div class="swiper-slide">
+                <img src="images/photo1.jpg" alt="照片1" title="照片1">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo2.jpg" alt="照片2" title="照片2">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo3.jpg" alt="照片3" title="照片3">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo4.jpg" alt="照片4" title="照片4">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo5.jpg" alt="照片5" title="照片5">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo6.jpg" alt="照片6" title="照片6">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo7.jpg" alt="照片7" title="照片7">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo8.jpg" alt="照片8" title="照片8">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo9.jpg" alt="照片9" title="照片9">
+            </div>
+            <div class="swiper-slide">
+                <img src="images/photo10.jpg" alt="照片10" title="照片10">
+            </div>
+        </div>
+        <!-- 添加分页器 -->
+        <div class="swiper-pagination"></div>
+    </div>
+
+    <!-- 祝福墙 -->
+    <div id="greetings-wall">
+        <!-- 动态加载祝福 -->
+    </div>
+</div>
+<!-- 引入 Swiper.js 的 JS 文件 -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+    // 初始化 Swiper
+    const swiper = new Swiper('.swiper-container', {
+    loop: true, // 循环播放
+    pagination: {
+    el: '.swiper-pagination', // 分页器
+    clickable: true,
+    },
+    autoplay: {
+    delay: 3000, // 自动播放间隔时间
+    },
+});
+
+// 静音按钮功能
+const muteBtn = document.getElementById('mute-btn');
+const bgMusic = document.getElementById('bg-music');
+
+muteBtn.addEventListener('click', () => {
+if (bgMusic.paused) {
+bgMusic.play();
+muteBtn.textContent = '🔇';
+} else {
+bgMusic.pause();
+muteBtn.textContent = '🔊';
+}
+});
+    // 获取当前用户的名字
+    function getUserId() {
+        return localStorage.getItem('username'); // 从本地存储中获取用户名字
+    }
+
+    // 格式化时间函数
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+
+    // 加载祝福
+    async function loadGreetings() {
+        try {
+            const response = await fetch('/greetings?mode=birthdaygirl');
+            const data = await response.json();
+
+            const wall = document.getElementById('greetings-wall');
+            wall.innerHTML = data.map(g => `
+                <div style="padding: 10px; border-bottom: 1px solid #ffb3d9;">
+                    <span style="color: #ff4d94; font-weight: bold;">${g.name}：</span>
+                    ${g.message}
+                    <div style="float: right;">
+                        <span style="color: #666; font-size: 0.9em;">
+                            ${formatDate(g.createdAt)} <!-- 显示时间 -->
+                        </span>
+                        <span style="color: #ff4d94; margin-left: 10px;">${g.likes}</span>
+                        <button class="like-btn" onclick="handleLike('${g._id}')" style="color: ${g.likedBy.includes(getUserId()) ? '#ff4d94' : '#ccc'}">
+                            ❤️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('加载失败:', error);
+        }
+    }
+
+    // 点赞/取消点赞
+    async function handleLike(id) {
+        try {
+            const userId = getUserId();
+            if (!userId) {
+                alert('请先填写名字');
+                return;
+            }
+
+            const response = await fetch(`/greetings/${id}/like`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }) // 发送用户名字
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                // 重新加载祝福
+                await loadGreetings();
+            } else {
+                alert(result.message || '操作失败');
+            }
+        } catch (error) {
+            console.error('操作失败:', error);
+            alert('操作失败，请稍后再试');
+        }
+    }
+
+    // 初始化加载祝福
+    loadGreetings();
+    setInterval(loadGreetings, 5000); // 每5秒刷新
+</script>
+</body>
+</html>
