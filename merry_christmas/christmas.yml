@@ -1,0 +1,11 @@
+services:
+  christmas-tree:
+    build: .
+    container_name: tree-app
+    ports:
+      - "1225:80"  # 外部访问端口 : 容器内部端口
+    restart: always
+    # 如果你想在不重新构建镜像的情况下修改视频，可以取消下面 volumes 的注释
+    # volumes:
+    #   - ./html:/usr/share/nginx/html
+    #   - ./nginx.conf:/etc/nginx/conf.d/default.conf

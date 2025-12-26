@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 新年倒计时</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #000033;
+            color: white;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+            padding: 20px 10px;
+        }
+        h1 {
+            font-size: 2.8rem;
+            margin: 0 0 15px 0;
+            text-shadow: 0 0 15px #fff;
+            z-index: 10;
+        }
+        .current-time {
+            font-size: 1.6rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            z-index: 10;
+        }
+        .countdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            z-index: 10;
+            width: 100%;
+            max-width: 900px;
+            padding: 0 10px;
+        }
+        .time-block {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            flex: 1;
+            min-width: 100px;
+            max-width: 180px;
+        }
+        .number {
+            font-size: 4.5rem;
+            font-weight: bold;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .label {
+            font-size: 1.4rem;
+        }
+        .happy {
+            font-size: 4rem;
+            margin-top: 40px;
+            display: none;
+            z-index: 10;
+            text-shadow: 0 0 20px gold;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ==================== 移动端适配 ==================== */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.3rem;
+            }
+            .current-time {
+                font-size: 1.4rem;
+                margin-bottom: 25px;
+            }
+            .countdown {
+                gap: 15px;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .time-block {
+                padding: 18px 12px;
+                min-width: 85px;
+            }
+            .number {
+                font-size: 3.8rem;
+            }
+            .label {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .current-time {
+                font-size: 1.2rem;
+            }
+            .countdown {
+                gap: 12px;
+            }
+            .time-block {
+                padding: 15px 10px;
+                min-width: 75px;
+                flex-basis: 45%;
+            }
+            .number {
+                font-size: 3.2rem;
+            }
+            .label {
+                font-size: 1.1rem;
+            }
+            .happy {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="fireworks"></canvas>
+
+    <h1>距离2026年还有</h1>
+    
+    <div class="current-time" id="current-time"></div>
+
+    <div class="countdown" id="countdown">
+        <div class="time-block">
+            <div class="number" id="days">00</div>
+            <div class="label">天</div>
+        </div>
+        <div class="time-block">
+            <div class="number" id="hours">00</div>
+            <div class="label">时</div>
+        </div>
+        <div class="time-block">
+            <div class="number" id="minutes">00</div>
+            <div class="label">分</div>
+        </div>
+        <div class="time-block">
+            <div class="number" id="seconds">00</div>
+            <div class="label">秒</div>
+        </div>
+    </div>
+
+    <div class="happy" id="happy">🎉 快乐2026新年！ 🎉</div>
+
+    <script>
+        // 目标时间：2026年1月1日 00:00:00
+        const targetDate = new Date("2026-01-01T00:00:00").getTime();
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            document.getElementById("current-time").innerText = 
+                `当前时间：${year}年 ${month}月 ${day}日 ${hours}:${minutes}:${seconds}`;
+        }
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            let distance = targetDate - now;
+
+            if (distance <= 0) {
+                document.getElementById("countdown").style.display = "none";
+                document.getElementById("happy").style.display = "block";
+                launchCelebrationFireworks();
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerText = days.toString().padStart(2, '0');
+            document.getElementById("hours").innerText = hours.toString().padStart(2, '0');
+            document.getElementById("minutes").innerText = minutes.toString().padStart(2, '0');
+            document.getElementById("seconds").innerText = seconds.toString().padStart(2, '0');
+        }
+
+        updateCurrentTime();
+        updateCountdown();
+        setInterval(() => {
+            updateCurrentTime();
+            updateCountdown();
+        }, 1000);
+
+        // ==================== 烟花动画 ====================
+        const canvas = document.getElementById("fireworks");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        let particles = [];
+        let celebrationMode = false;
+
+        class Particle {
+            constructor(x, y, color, velocity) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocity = velocity;
+                this.alpha = 1;
+                this.friction = 0.98;
+                this.gravity = 0.08;
+                this.size = Math.random() * 2.5 + 1; // 移动端略小一点，性能更好
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.008;
+            }
+        }
+
+        function createFirework() {
+            const x = Math.random() * canvas.width;
+            const y = canvas.height;
+            const targetY = Math.random() * (canvas.height / 3) + canvas.height / 6;
+            const color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+            const particleCount = window.innerWidth < 768 ? 50 : 80; // 移动端减少粒子数，提升性能
+
+            let rocket = { x, y, vy: -10 - Math.random() * 4, color };
+
+            function launch() {
+                ctx.beginPath();
+                ctx.arc(rocket.x, rocket.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = "white";
+                ctx.fill();
+
+                rocket.y += rocket.vy;
+                rocket.vy += 0.2;
+
+                if (rocket.vy >= 0 || rocket.y >= targetY) {
+                    for (let i = 0; i < particleCount; i++) {
+                        const angle = (Math.PI * 2 * i) / particleCount;
+                        const speed = 3 + Math.random() * 5;
+                        particles.push(new Particle(
+                            rocket.x, rocket.y, rocket.color,
+                            { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed }
+                        ));
+                    }
+                    return;
+                }
+                requestAnimationFrame(launch);
+            }
+            launch();
+        }
+
+        function launchCelebrationFireworks() {
+            celebrationMode = true;
+            const interval = setInterval(() => {
+                if (!celebrationMode) clearInterval(interval);
+                createFirework();
+                if (window.innerWidth > 768) createFirework(); // 大屏多放一个
+            }, 400);
+        }
+
+        function animate() {
+            ctx.fillStyle = "rgba(0, 0, 10, 0.25)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach((p, i) => {
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                } else {
+                    p.update();
+                    p.draw();
+                }
+            });
+
+            if (!celebrationMode && Math.random() < 0.015) { // 稍微降低频率，省电省性能
+                createFirework();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gomoku Web - Enhanced UI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; }
+        #container { max-width: 700px; margin: 0 auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        canvas { border: 1px solid #333; background: url('https://i.imgur.com/wood-texture.jpg') repeat; /* 木纹背景，可替换URL */ cursor: pointer; }
+        #status { margin: 10px 0; font-size: 18px; color: #333; }
+        #room-info { font-size: 14px; color: #666; }
+        button { padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #45a049; }
+        #room_id { padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 150px; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>五子棋（双人对弈）</h1>
+        <input id="room_id" placeholder="房间 ID (可选)" />
+        <button onclick="joinRoom()">加入/创建房间</button>
+        <button id="restart" onclick="restartGame()" style="display: none;">重新开始</button>
+        <canvas id="board" width="600" height="600"></canvas>
+        <div id="status"></div>
+        <div id="room-info"></div>
+    </div>
+
+    <script>
+        const socket = io();
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d');
+        const size = 15;
+        const cellSize = canvas.width / (size + 1);  // 调整 cellSize 以匹配 (size+1) 条线
+        let board = [];
+        let myMarker = '';
+        let currentTurn = '';
+        let roomId = '';
+        let gameOver = false;
+
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 绘制网格线：(size+1) 条线
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= size; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * cellSize, 0);
+                ctx.lineTo(i * cellSize, canvas.height);
+                ctx.moveTo(0, i * cellSize);
+                ctx.lineTo(canvas.width, i * cellSize);
+                ctx.stroke();
+            }
+            // 绘制棋子：置于网格线交点
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    if (board[row][col] !== '.') {
+                        ctx.beginPath();
+                        ctx.arc((col + 1) * cellSize, (row + 1) * cellSize, cellSize / 2 - 2, 0, 2 * Math.PI);
+                        ctx.fillStyle = board[row][col] === 'B' ? '#000' : '#fff';
+                        ctx.fill();
+                        ctx.strokeStyle = '#888';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();  // 棋子边框
+                        // 添加阴影效果
+                        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                        ctx.shadowBlur = 5;
+                        ctx.shadowOffsetX = 2;
+                        ctx.shadowOffsetY = 2;
+                    }
+                }
+            }
+            ctx.shadowColor = 'transparent';  // 重置阴影
+        }
+
+        function joinRoom() {
+            roomId = document.getElementById('room_id').value || '';
+            socket.emit('join', { room_id: roomId });
+        }
+
+        function restartGame() {
+            socket.emit('restart', { room_id: roomId });
+            document.getElementById('restart').style.display = 'none';
+            gameOver = false;
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (gameOver || myMarker !== currentTurn) return;
+            const rect = canvas.getBoundingClientRect();
+            const col = Math.round((e.clientX - rect.left) / cellSize) - 1;  // 调整为交点索引 (0 to 14)
+            const row = Math.round((e.clientY - rect.top) / cellSize) - 1;   // 使用 round 以靠近最近交点
+            if (col >= 0 && col < size && row >= 0 && row < size) {
+                socket.emit('move', { room_id: roomId, x: row, y: col });
+            }
+        });
+
+        socket.on('joined', (data) => {
+            roomId = data.room_id;
+            myMarker = data.marker;
+            board = data.board;
+            drawBoard();
+            document.getElementById('status').innerText = `你是 ${myMarker === 'B' ? '黑棋' : '白棋'}，等待玩家...`;
+            document.getElementById('room-info').innerText = `房间 ID: ${roomId} | 你的颜色: ${myMarker === 'B' ? '黑' : '白'}`;
+        });
+
+        socket.on('start', (data) => {
+            board = data.board;
+            currentTurn = data.current;
+            drawBoard();
+            document.getElementById('status').innerText = `游戏开始！轮到 ${currentTurn === 'B' ? '黑棋' : '白棋'}`;
+        });
+
+        socket.on('update', (data) => {
+            board[data.x][data.y] = data.marker;
+            drawBoard();  // 直接重绘
+            if (data.win) {
+                document.getElementById('status').innerText = `${data.marker === 'B' ? '黑棋' : '白棋'} 获胜！`;
+                gameOver = true;
+                document.getElementById('restart').style.display = 'inline';
+            } else if (data.draw) {
+                document.getElementById('status').innerText = '平局！';
+                gameOver = true;
+                document.getElementById('restart').style.display = 'inline';
+            } else {
+                currentTurn = currentTurn === 'B' ? 'W' : 'B';
+                document.getElementById('status').innerText = `轮到 ${currentTurn === 'B' ? '黑棋' : '白棋'}`;
+            }
+        });
+
+        socket.on('full', (msg) => {
+            alert(msg);
+        });
+
+        socket.on('opponent_left', () => {
+            alert('对手离开，游戏结束');
+            gameOver = true;
+        });
+
+        // 添加重启事件（需后端支持）
+        socket.on('restarted', (data) => {
+            board = data.board;
+            currentTurn = data.current;
+            drawBoard();
+            document.getElementById('status').innerText = `游戏重启！轮到 ${currentTurn === 'B' ? '黑棋' : '白棋'}`;
+            gameOver = false;
+        });
+    </script>
+</body>
+</html>

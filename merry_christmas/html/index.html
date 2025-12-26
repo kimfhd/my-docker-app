@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🎄 Merry Christmas!</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+    }
+
+    /* --- 1. 视频层 (保持原画质) --- */
+    video {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+  
+    /* 关键修改：从 cover 改成 contain */
+      object-fit: contain;
+  
+    /* 下面这两行可以保留，确保视频至少能占满一个方向 */
+      max-width: 100%;
+      max-height: 100%;
+  
+      width: auto;
+      height: auto;
+  
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+}
+    /* --- 2. 文字特效层 (Merry Christmas) --- */
+    .christmas-text {
+      position: absolute;
+      top: 30%; left: 0; width: 100%;
+      text-align: center;
+      color: #fff;
+      font-weight: bold;
+      font-size: 3.5rem;
+      z-index: 10;
+      opacity: 0; /* 初始隐藏 */
+      transition: opacity 2s;
+      pointer-events: none;
+      /* 霓虹灯光晕效果 */
+      text-shadow: 
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px #ff0000,
+        0 0 40px #ff0000,
+        0 0 80px #ff0000;
+      animation: neon-flicker 3s infinite alternate;
+    }
+
+    @keyframes neon-flicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        text-shadow: 
+          0 0 5px #fff, 0 0 10px #fff, 
+          0 0 20px #ff0000, 0 0 40px #ff0000, 
+          0 0 80px #ff0000;
+      }
+      20%, 24%, 55% {
+        text-shadow: none; /* 模拟灯管接触不良的闪烁 */
+        opacity: 0.5;
+      }
+    }
+
+    /* --- 3. Loading 加载层 --- */
+    #loader {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+    }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 5px solid rgba(255,255,255,0.3);
+      border-top: 5px solid #ff0000; /* 红色转圈 */
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    #progress-text { font-size: 1.2rem; }
+    
+    /* 点击播放按钮 (解决浏览器自动播放限制) */
+    #start-btn {
+      display: none;
+      padding: 15px 40px;
+      font-size: 1.5rem;
+      color: #fff;
+      background: #c40000;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255,0,0,0.5);
+    }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    @media (max-width: 768px) {
+      .christmas-text { font-size: 2.5rem; top: 35%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loader">
+    <div class="spinner" id="spinner"></div>
+    <div id="progress-text">点亮圣诞树ing... 0%</div>
+    <button id="start-btn">🎄 点我开启圣诞惊喜</button>
+  </div>
+
+  <div class="christmas-text" id="title">Merry Christmas!</div>
+
+  <video id="bgVideo" loop playsinline muted preload="auto">
+    <source src="christmas_tree2.mp4" type="video/mp4">
+  </video>
+
+  <audio id="bgMusic">
+    <source src="music.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // 获取元素
+    const video = document.getElementById('bgVideo');
+    const music = document.getElementById('bgMusic');
+    const loader = document.getElementById('loader');
+    const progressText = document.getElementById('progress-text');
+    const spinner = document.getElementById('spinner');
+    const startBtn = document.getElementById('start-btn');
+    const title = document.getElementById('title');
+
+    // --- 逻辑1: 监控视频下载进度 ---
+    // 因为不压画质，所以必须等缓冲足够了再显示
+    video.addEventListener('progress', () => {
+      if (video.buffered.length > 0) {
+        const duration = video.duration;
+        const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+        if (duration > 0) {
+          const percent = Math.round((bufferedEnd / duration) * 100);
+          progressText.innerText = `点亮圣诞树ing... ${percent}%`;
+          
+          if (percent >= 70 || bufferedEnd >= duration) {
+            readyToPlay();
+          }
+        }
+      }
+    });
+
+    // 状态切换：加载完毕，显示按钮
+    function readyToPlay() {
+      spinner.style.display = 'none';
+      progressText.style.display = 'none';
+      startBtn.style.display = 'block';
+    }
+
+    // --- 逻辑2: 用户点击开始 (解决音乐自动播放限制) ---
+    startBtn.addEventListener('click', () => {
+      // 隐藏加载层
+      loader.style.opacity = '0';
+      setTimeout(() => loader.style.display = 'none', 500);
+
+      // 显示内容
+      video.style.opacity = '1';
+      title.style.opacity = '1';
+
+      // 播放视频
+      video.play();
+      
+      // 播放音乐
+      music.volume = 0.5; // 音量 50%
+      music.play().catch(e => console.log("音乐播放需交互"));
+    });
+
+    // --- 逻辑3: 音乐只播放 3 次 ---
+    let playCount = 1; // 第一次正在播
+    const maxPlays = 3;
+
+    music.addEventListener('ended', () => {
+      if (playCount < maxPlays) {
+        playCount++;
+        currentTime = 0;
+        music.play();
+        console.log(`音乐播放第 ${playCount} 次`);
+      } else {
+        console.log("音乐播放结束");
+      }
+    });
+
+    // 强制触发下载
+    video.load();
+  </script>
+</body>
+</html>
