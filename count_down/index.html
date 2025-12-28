@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>2026 新年倒计时</title>
     <style>
+        /* 全局重置与基础样式 */
         * {
             box-sizing: border-box;
         }
+
         body {
             margin: 0;
             min-height: 100vh;
@@ -15,7 +17,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: #000033;
+            background: linear-gradient(to bottom, #000033, #000066);
             color: white;
             font-family: 'Arial', 'Helvetica', sans-serif;
             text-align: center;
@@ -23,28 +25,36 @@
             position: relative;
             padding: 20px 10px;
         }
+
+        /* 元素层级管理 */
+        h1, .current-time, .countdown, .happy, .tip {
+            position: relative;
+            z-index: 10;
+        }
+
         h1 {
             font-size: 2.8rem;
             margin: 0 0 15px 0;
             text-shadow: 0 0 15px #fff;
-            z-index: 10;
         }
+
         .current-time {
             font-size: 1.6rem;
             margin-bottom: 30px;
             opacity: 0.9;
-            z-index: 10;
         }
+
+        /* 倒计时容器样式 */
         .countdown {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             justify-content: center;
-            z-index: 10;
             width: 100%;
             max-width: 900px;
             padding: 0 10px;
         }
+
         .time-block {
             background: rgba(255, 255, 255, 0.15);
             padding: 20px 15px;
@@ -55,96 +65,77 @@
             min-width: 100px;
             max-width: 180px;
         }
+
         .number {
             font-size: 4.5rem;
             font-weight: bold;
             line-height: 1;
             margin-bottom: 8px;
         }
+
         .label {
             font-size: 1.4rem;
         }
+
+        /* 庆祝动画样式 */
         .happy {
             font-size: 4rem;
             margin-top: 40px;
             display: none;
-            z-index: 10;
             text-shadow: 0 0 20px gold;
             animation: pulse 1.5s infinite;
         }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
+
+        /* 烟花画布样式 */
         canvas {
             position: absolute;
             top: 0;
             left: 0;
-            pointer-events: none;
             z-index: 1;
+            pointer-events: none; /* 确保点击穿透，除非JS另行处理 */
         }
 
-        /* ==================== 移动端适配 ==================== */
+        .tip {
+            position: absolute;
+            bottom: 20px;
+            font-size: 1.2rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* 响应式设计：平板尺寸 */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2.3rem;
-            }
-            .current-time {
-                font-size: 1.4rem;
-                margin-bottom: 25px;
-            }
-            .countdown {
-                gap: 15px;
-                flex-direction: row;
-                flex-wrap: wrap;
-            }
-            .time-block {
-                padding: 18px 12px;
-                min-width: 85px;
-            }
-            .number {
-                font-size: 3.8rem;
-            }
-            .label {
-                font-size: 1.2rem;
-            }
+            h1 { font-size: 2.3rem; }
+            .current-time { font-size: 1.4rem; margin-bottom: 25px; }
+            .time-block { padding: 18px 12px; min-width: 85px; }
+            .number { font-size: 3.8rem; }
+            .label { font-size: 1.2rem; }
+            .tip { font-size: 1rem; bottom: 15px; }
         }
 
+        /* 响应式设计：手机尺寸 */
         @media (max-width: 480px) {
-            h1 {
-                font-size: 2rem;
-            }
-            .current-time {
-                font-size: 1.2rem;
-            }
-            .countdown {
-                gap: 12px;
-            }
-            .time-block {
-                padding: 15px 10px;
-                min-width: 75px;
-                flex-basis: 45%;
-            }
-            .number {
-                font-size: 3.2rem;
-            }
-            .label {
-                font-size: 1.1rem;
-            }
-            .happy {
-                font-size: 3rem;
-            }
+            h1 { font-size: 2rem; }
+            .current-time { font-size: 1.2rem; }
+            .time-block { min-width: 75px; flex-basis: 45%; }
+            .number { font-size: 3.2rem; }
+            .label { font-size: 1.1rem; }
+            .happy { font-size: 3rem; }
         }
     </style>
 </head>
 <body>
     <canvas id="fireworks"></canvas>
-
-    <h1>距离2026年还有</h1>
     
+    <h1>距离2026年还有</h1>
     <div class="current-time" id="current-time"></div>
-
+    
     <div class="countdown" id="countdown">
         <div class="time-block">
             <div class="number" id="days">00</div>
@@ -163,13 +154,154 @@
             <div class="label">秒</div>
         </div>
     </div>
-
+    
     <div class="happy" id="happy">🎉 快乐2026新年！ 🎉</div>
 
     <script>
-        // 目标时间：2026年1月1日 00:00:00
+        // --- 配置与初始化 ---
         const targetDate = new Date("2026-01-01T00:00:00").getTime();
+        const canvas = document.getElementById("fireworks");
+        const ctx = canvas.getContext("2d");
 
+        // 设置画布尺寸
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        let particles = [];
+        let celebrationMode = false;
+
+        // --- 烟花粒子类 ---
+        class Particle {
+            constructor(x, y, color, velocity) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocity = velocity;
+                this.alpha = 1;
+                this.friction = 0.98;
+                this.gravity = 0.08;
+                this.size = Math.random() * 3 + 1.5;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.006; // 淡出速度
+            }
+        }
+
+        // --- 创建烟花 ---
+        function createFirework(x = Math.random() * canvas.width, y = canvas.height, isManual = false) {
+            const targetY = Math.random() * (canvas.height / 3) + canvas.height / 6;
+            const color = `hsl(${Math.random() * 360}, 100%, 65%)`; // 高亮度颜色
+            // 手动点击生成的烟花粒子更多
+            const particleCount = isManual ? 150 : (window.innerWidth < 768 ? 60 : 100); 
+            
+            let rocket = { 
+                x, 
+                y, 
+                vy: -12 - Math.random() * 5, 
+                color 
+            };
+
+            function launch() {
+                ctx.beginPath();
+                ctx.arc(rocket.x, rocket.y, isManual ? 6 : 4, 0, Math.PI * 2);
+                ctx.fillStyle = "white";
+                ctx.fill();
+                
+                rocket.y += rocket.vy;
+                rocket.vy += 0.25; // 重力模拟
+
+                // 到达顶点或速度降为0时爆炸
+                if (rocket.vy >= 0 || rocket.y >= targetY) {
+                    for (let i = 0; i < particleCount; i++) {
+                        const angle = (Math.PI * 2 * i) / particleCount;
+                        const speed = 5 + Math.random() * (isManual ? 10 : 7);
+                        particles.push(new Particle(rocket.x, rocket.y, rocket.color, {
+                            x: Math.cos(angle) * speed + (Math.random() - 0.5) * 2,
+                            y: Math.sin(angle) * speed + (Math.random() - 0.5) * 2
+                        }));
+                    }
+                    return;
+                }
+                requestAnimationFrame(launch);
+            }
+            launch();
+        }
+
+        // --- 新年庆祝模式 ---
+        function launchCelebrationFireworks() {
+            celebrationMode = true;
+            const interval = setInterval(() => {
+                if (!celebrationMode) clearInterval(interval);
+                createFirework();
+                createFirework();
+            }, 300);
+        }
+
+        // --- 交互处理 (点击/触摸放烟花) ---
+        function handleFirework(event) {
+            let x, y;
+            if (event.touches) {
+                // 允许默认行为被阻止，防止双击缩放等
+                // 注意：如果需要页面滚动，这里可能需要调整
+                // event.preventDefault(); 
+                x = event.touches[0].clientX;
+                y = event.touches[0].clientY;
+            } else {
+                x = event.clientX;
+                y = event.clientY;
+            }
+            createFirework(x, y, true);
+        }
+
+        document.body.addEventListener('click', handleFirework);
+        document.body.addEventListener('touchstart', handleFirework);
+
+        // --- 动画主循环 ---
+        function animate() {
+            // 使用带透明度的背景填充以产生拖尾效果
+            ctx.fillStyle = "rgba(0, 0, 10, 0.2)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach((p, i) => {
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                } else { 
+                    p.update(); 
+                    p.draw(); 
+                }
+            });
+
+            // 自动偶尔释放烟花
+            if (!celebrationMode && Math.random() < 0.02) {
+                createFirework(); 
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- 倒计时逻辑 ---
         function updateCurrentTime() {
             const now = new Date();
             const year = now.getFullYear();
@@ -187,6 +319,7 @@
             const now = new Date().getTime();
             let distance = targetDate - now;
 
+            // 倒计时结束
             if (distance <= 0) {
                 document.getElementById("countdown").style.display = "none";
                 document.getElementById("happy").style.display = "block";
@@ -205,121 +338,13 @@
             document.getElementById("seconds").innerText = seconds.toString().padStart(2, '0');
         }
 
+        // 初始化与定时器
         updateCurrentTime();
         updateCountdown();
-        setInterval(() => {
-            updateCurrentTime();
-            updateCountdown();
+        setInterval(() => { 
+            updateCurrentTime(); 
+            updateCountdown(); 
         }, 1000);
-
-        // ==================== 烟花动画 ====================
-        const canvas = document.getElementById("fireworks");
-        const ctx = canvas.getContext("2d");
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        window.addEventListener("resize", () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-
-        let particles = [];
-        let celebrationMode = false;
-
-        class Particle {
-            constructor(x, y, color, velocity) {
-                this.x = x;
-                this.y = y;
-                this.color = color;
-                this.velocity = velocity;
-                this.alpha = 1;
-                this.friction = 0.98;
-                this.gravity = 0.08;
-                this.size = Math.random() * 2.5 + 1; // 移动端略小一点，性能更好
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.alpha;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                ctx.restore();
-            }
-            update() {
-                this.velocity.x *= this.friction;
-                this.velocity.y *= this.friction;
-                this.velocity.y += this.gravity;
-                this.x += this.velocity.x;
-                this.y += this.velocity.y;
-                this.alpha -= 0.008;
-            }
-        }
-
-        function createFirework() {
-            const x = Math.random() * canvas.width;
-            const y = canvas.height;
-            const targetY = Math.random() * (canvas.height / 3) + canvas.height / 6;
-            const color = `hsl(${Math.random() * 360}, 100%, 60%)`;
-            const particleCount = window.innerWidth < 768 ? 50 : 80; // 移动端减少粒子数，提升性能
-
-            let rocket = { x, y, vy: -10 - Math.random() * 4, color };
-
-            function launch() {
-                ctx.beginPath();
-                ctx.arc(rocket.x, rocket.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = "white";
-                ctx.fill();
-
-                rocket.y += rocket.vy;
-                rocket.vy += 0.2;
-
-                if (rocket.vy >= 0 || rocket.y >= targetY) {
-                    for (let i = 0; i < particleCount; i++) {
-                        const angle = (Math.PI * 2 * i) / particleCount;
-                        const speed = 3 + Math.random() * 5;
-                        particles.push(new Particle(
-                            rocket.x, rocket.y, rocket.color,
-                            { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed }
-                        ));
-                    }
-                    return;
-                }
-                requestAnimationFrame(launch);
-            }
-            launch();
-        }
-
-        function launchCelebrationFireworks() {
-            celebrationMode = true;
-            const interval = setInterval(() => {
-                if (!celebrationMode) clearInterval(interval);
-                createFirework();
-                if (window.innerWidth > 768) createFirework(); // 大屏多放一个
-            }, 400);
-        }
-
-        function animate() {
-            ctx.fillStyle = "rgba(0, 0, 10, 0.25)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            particles.forEach((p, i) => {
-                if (p.alpha <= 0) {
-                    particles.splice(i, 1);
-                } else {
-                    p.update();
-                    p.draw();
-                }
-            });
-
-            if (!celebrationMode && Math.random() < 0.015) { // 稍微降低频率，省电省性能
-                createFirework();
-            }
-
-            requestAnimationFrame(animate);
-        }
-
-        animate();
     </script>
 </body>
 </html>

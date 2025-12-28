@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  newyear-countdown:
+    build: .
+    image: newyear:1.1.1
+    container_name: hi2026          
+    restart: unless-stopped                  
+    ports:
+      - "2026:2026"                          
+
+networks:
+  default:
+    name: newyear-net                        # 可选，自定义网络名
