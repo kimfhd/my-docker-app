@@ -133,7 +133,7 @@
 <body>
     <canvas id="fireworks"></canvas>
     
-    <h1>距离2026年还有</h1>
+    <h1>距离大年初一农历新年还有</h1>
     <div class="current-time" id="current-time"></div>
     
     <div class="countdown" id="countdown">
@@ -155,7 +155,7 @@
         </div>
     </div>
     
-    <div class="happy" id="happy">🎉 快乐2026新年！ 🎉</div>
+    <div class="happy" id="happy">🎉 2026新年快乐！！！ 🎉</div>
 
     <script>
         // --- 配置与初始化 ---
@@ -320,12 +320,43 @@
             let distance = targetDate - now;
 
             // 倒计时结束
-            if (distance <= 0) {
-                document.getElementById("countdown").style.display = "none";
-                document.getElementById("happy").style.display = "block";
-                launchCelebrationFireworks();
-                return;
-            }
+            if (distance <= 0 && !celebrationMode) {
+    celebrationMode = true;
+    
+    // 1. 隱藏倒計時 + 顯示大標題
+    document.getElementById("countdown").style.display = "none";
+    const happy = document.getElementById("happy");
+    happy.innerHTML = "🎉 2026 新年快樂！🎉<br><small>丙午馬年 ⋅ 萬事如意</small>";
+    happy.style.display = "block";
+    
+    // 2. 畫面閃光
+    document.body.style.transition = "background 1.2s";
+    document.body.style.background = "linear-gradient(to bottom, #ff6b6b, #ffd93d)";
+    setTimeout(() => {
+        document.body.style.background = "linear-gradient(to bottom, #000033, #000066)";
+    }, 1200);
+    
+    // 3. 立即來一波大爆發
+    for(let i = 0; i < 8; i++) {
+        setTimeout(() => {
+            createFirework(
+                Math.random() * canvas.width,
+                canvas.height * 0.2 + Math.random() * canvas.height * 0.4,
+                true
+            );
+        }, i * 180);
+    }
+    
+    // 4. 進入持續慶祝（比原本慢一點但更有節奏）
+    setInterval(() => {
+        if (!celebrationMode) return;
+        createFirework();
+        if (Math.random() > 0.4) createFirework();
+    }, 800);
+    
+    // 5. 6秒後加祝福語漂浮（可自行擴充）
+    setTimeout(addFloatingBlessings, 6000);
+}
 
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
